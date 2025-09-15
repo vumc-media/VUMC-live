@@ -236,3 +236,97 @@
     if (hadCache) status.textContent = '';
   });
 })();
+
+    if (cached) {
+      renderGrid(cached);
+      status.textContent = 'Loaded from cache.';
+      return true;
+    }
+    return false;
+  };
+
+  // Fetch upcoming via YouTube Data API
+  const fetchUpcoming = async () => {
+    status.textContent = 'Loading upcoming streams…';
+    try {
+      const searchURL = new URL('https://www.googleapis.com/youtube/v3/search');
+      searchURL.searchParams.set('key', API_KEY);
+      searchURL.searchParams.set('channelId', CHANNEL_ID);
+      searchURL.searchParams.set('part', 'snippet');
+      searchURL.searchParams.set('type', 'video');
+      searchURL.searchParams.set('eventType', 'upcoming');
+      searchURL.searchParams.set('order', 'date');
+      searchURL.searchParams.set('maxResults', MAX_RESULTS);
+
+      const searchRes = await fetch(searchURL.toString());
+      if (!searchRes.ok) throw new Error(`YouTube API (search) ${searchRes.status}`);
+      const searchData = await searchRes.json();
+      const ids = (searchData.items || []).map(i => i.id?.videoId).filter(Boolean);
+      if (!ids.length) {
+        renderGrid([]);
+        status.textContent = 'No upcoming live streams scheduled.';
+        writeCache([]);
+        return;
+      }
+
+      const videosURL = new URL('https://www.googleapis.com/youtube/v3/videos');
+      videosURL.searchParams.set('key', API_KEY);
+      videosURL.searchParams.set('id', ids.join(','));
+      videosURL.searchParams.set('part', 'snippet,liveStreamingDetails');
+
+      const videosRes = await fetch(videosURL.toString());
+      if (!videosRes.ok) throw new Error(`YouTube API (videos) ${videosRes.status}`);
+      const videosData = await videosRes.json();
+
+      // Build, filter stale/ended, sort
+      const now = Date.now();
+      const hidePastMs = HIDE_PAST_HOURS * 60 * 60 * 1000;
+
+      const detailed = (videosData.items || []).map(v => {
+        const lsd = v?.liveStreamingDetails || {};
+        const scheduled = lsd?.scheduledStartTime || null;
+        const actualStart = lsd?.actualStartTime || null;
+        const actualEnd = lsd?.actualEndTime || null;
+        return {
+          id: v.id,
+          title: v?.snippet?.title || 'Untitled',
+          desc: v?.snippet?.description || '',
+          thumb: thumbUrl(v),
+          scheduled,
+          actualStart,
+          actualEnd,
+          channelTitle: v?.snippet?.channelTitle || ''
+        };
+      })
+      .filter(ev => {
+        // Hide if YouTube reports it ended.
+        if (ev.actualEnd) return false;
+        // Hide if never started and it's too far past the scheduled time.
+        if (ev.scheduled) {
+          const schedMs = new Date(ev.scheduled).getTime();
+          if (!ev.actualStart && (schedMs + hidePastMs) < now) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        const ta = a.scheduled ? new Date(a.scheduled).getTime() : Infinity;
+        const tb = b.scheduled ? new Date(b.scheduled).getTime() : Infinity;
+        return ta - tb;
+      });
+
+      renderGrid(detailed);
+      writeCache(detailed);
+      status.textContent = '';
+    } catch (err) {
+      console.error(err);
+      status.textContent = 'Error loading upcoming streams.';
+      grid.innerHTML = `<div class="yt-error">There was a problem fetching data. Please try again later.</div>`;
+    }
+  };
+
+  // Try cache first for snappy UX, then refresh in background
+  const hadCache = loadFromCache();
+  fetchUpcoming().then(() => {
+    if (hadCache) status.textContent = '';
+  });
+})();

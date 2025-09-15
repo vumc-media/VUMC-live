@@ -10,6 +10,9 @@
   <div class="wrap">
     <h1>Versailles UMC — Upcoming Live Streams</h1>
 
+    <!-- Theme toggle button -->
+    <button id="themeToggle" class="theme-toggle">Toggle Theme</button>
+
     <!-- Upcoming Streams Widget -->
     <div id="youtube-upcoming"
          data-channel-id="UC_svgodM3blLqWEBQ5yNjmA"
@@ -35,5 +38,17 @@
   </div>
 
   <script src="youtube-upcoming.js" defer></script>
+
+  <!-- Theme toggle script -->
+  <script>
+    const body = document.body;
+    const toggleBtn = document.getElementById('themeToggle');
+    // load saved theme
+    if (localStorage.getItem('theme') === 'dark') body.classList.add('dark-theme');
+    toggleBtn.addEventListener('click', () => {
+      body.classList.toggle('dark-theme');
+      localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+    });
+  </script>
 </body>
 </html>

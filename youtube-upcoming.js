@@ -1,7 +1,15 @@
 /* youtube-upcoming.js
    Stand-alone widget for upcoming (scheduled) YouTube live streams.
+   Now includes stale-event filtering and CTA fallback.
    Mount requirements:
-   - <div id="youtube-upcoming" data-channel-id="" data-api-key="" [data-max-results] [data-open-in] [data-timezone] [data-channel-handle]>
+   - <div id="youtube-upcoming"
+          data-channel-id=""
+          data-api-key=""
+          [data-max-results]
+          [data-open-in]
+          [data-timezone]
+          [data-channel-handle]
+          [data-hide-past-hours]>
    - Modal structure with #ytModal, #ytPlayer and .close (included in index.html)
 */
 
@@ -15,6 +23,7 @@
   const OPEN_IN = (mount.getAttribute('data-open-in') || 'modal').toLowerCase(); // modal | newtab
   const TZ = mount.getAttribute('data-timezone') || undefined; // e.g., "America/New_York"
   const CHANNEL_HANDLE = mount.getAttribute('data-channel-handle') || null; // e.g., @versaillesumc
+  const HIDE_PAST_HOURS = Math.max(0, parseInt(mount.getAttribute('data-hide-past-hours') || '6', 10)); // default 6h
 
   if (!API_KEY || !CHANNEL_ID) {
     mount.innerHTML = `<div class="yt-error">Missing data-api-key or data-channel-id on #youtube-upcoming.</div>`;
@@ -175,14 +184,36 @@
       if (!videosRes.ok) throw new Error(`YouTube API (videos) ${videosRes.status}`);
       const videosData = await videosRes.json();
 
-      const detailed = (videosData.items || []).map(v => ({
-        id: v.id,
-        title: v?.snippet?.title || 'Untitled',
-        desc: v?.snippet?.description || '',
-        thumb: thumbUrl(v),
-        scheduled: v?.liveStreamingDetails?.scheduledStartTime || null,
-        channelTitle: v?.snippet?.channelTitle || ''
-      }))
+      // Build, filter stale/ended, sort
+      const now = Date.now();
+      const hidePastMs = HIDE_PAST_HOURS * 60 * 60 * 1000;
+
+      const detailed = (videosData.items || []).map(v => {
+        const lsd = v?.liveStreamingDetails || {};
+        const scheduled = lsd?.scheduledStartTime || null;
+        const actualStart = lsd?.actualStartTime || null;
+        const actualEnd = lsd?.actualEndTime || null;
+        return {
+          id: v.id,
+          title: v?.snippet?.title || 'Untitled',
+          desc: v?.snippet?.description || '',
+          thumb: thumbUrl(v),
+          scheduled,
+          actualStart,
+          actualEnd,
+          channelTitle: v?.snippet?.channelTitle || ''
+        };
+      })
+      .filter(ev => {
+        // Hide if YouTube reports it ended.
+        if (ev.actualEnd) return false;
+        // Hide if never started and it's too far past the scheduled time.
+        if (ev.scheduled) {
+          const schedMs = new Date(ev.scheduled).getTime();
+          if (!ev.actualStart && (schedMs + hidePastMs) < now) return false;
+        }
+        return true;
+      })
       .sort((a, b) => {
         const ta = a.scheduled ? new Date(a.scheduled).getTime() : Infinity;
         const tb = b.scheduled ? new Date(b.scheduled).getTime() : Infinity;

@@ -1,0 +1,88 @@
+/* youtube-grid.css — styles for the live streams widget */
+:root {
+  --wrap-max: 1100px;
+  --bg: #0b0c10;
+  --card: #11141a;
+  --muted: #eef1f5;
+  --border: #1f2430;
+  --border-2: #2a3342;
+  --accent: #e7edf8;
+  --badge: rgba(220,0,0,.9);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.wrap { max-width: var(--wrap-max); margin: 2rem auto; padding: 0 1rem; }
+h1 { font-size: clamp(1.4rem, 1rem + 2vw, 2rem); margin: 0 0 1rem; }
+.note { opacity:.85; font-size:.95rem; margin-top:.75rem; }
+
+/* Modal */
+.modal.hidden { display:none; }
+.modal {
+  position:fixed; inset:0; background:rgba(0,0,0,.8);
+  display:flex; align-items:center; justify-content:center; z-index:9999; padding:1rem;
+}
+.modal-content {
+  position:relative; width:min(100%, 960px); aspect-ratio:16/9; background:#000;
+  border-radius:.75rem; overflow:hidden;
+}
+.modal .close {
+  position:absolute; top:.5rem; right:.5rem; font-size:2rem; line-height:1;
+  background:transparent; color:#fff; border:0; cursor:pointer;
+}
+#ytPlayer { width:100%; height:100%; border:0; display:block; }
+
+/* Grid */
+.yt-grid-wrap { margin-top:1rem; }
+.yt-grid-title { margin:.25rem 0 1rem; font-size:1.25rem; }
+.yt-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:1rem; }
+
+.yt-card {
+  background: var(--card); border:1px solid var(--border);
+  border-radius:.75rem; overflow:hidden; display:flex; flex-direction:column;
+}
+.yt-thumb-wrap { position:relative; }
+.yt-thumb { width:100%; height:auto; display:block; aspect-ratio:16/9; object-fit:cover; }
+
+/* Live Soon badge */
+.yt-badge {
+  position:absolute; top:.5rem; left:.5rem; padding:.25rem .5rem; font-size:.75rem; font-weight:700;
+  background: var(--badge); color:#fff; border-radius:.375rem;
+}
+
+.yt-meta { padding:.75rem .9rem; display:grid; gap:.35rem; }
+.yt-title { font-size:1rem; margin:0; line-height:1.3; cursor:pointer; }
+.yt-time { font-size:.9rem; opacity:.85; margin:0; }
+
+.yt-play {
+  margin:.5rem .9rem 1rem; padding:.55rem .9rem; font-weight:600;
+  background: var(--accent); color: var(--bg); border:0; border-radius:.5rem; cursor:pointer;
+}
+.yt-play:hover { filter:brightness(.95); }
+
+.yt-empty, .yt-error {
+  padding:1rem; background:#171b24; border:1px solid var(--border-2); border-radius:.5rem;
+}
+
+.yt-status { margin-top:.5rem; opacity:.8; font-size:.9rem; }
+
+/* CTA fallback */
+.yt-cta {
+  padding:1.25rem; background:#12151c; border:1px dashed var(--border-2); border-radius:.75rem;
+}
+.yt-cta h3 { margin:0 0 .5rem; font-size:1.15rem; }
+.yt-cta p { margin:0 0 .75rem; opacity:.9; }
+.cta-buttons { display:flex; flex-wrap:wrap; gap:.5rem; }
+.btn {
+  display:inline-block; padding:.6rem 1rem; border-radius:.5rem; text-decoration:none; font-weight:700;
+  background:#1f2430; color:#e8ecf4; border:1px solid var(--border-2);
+}
+.btn.primary { background:#e7edf8; color:#0b0c10; border-color:#e7edf8; }
+.btn:hover { filter:brightness(.95); }

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VUMC Upcoming Live Streams</title>
+  <link rel="stylesheet" href="youtube-grid.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>Versailles UMC — Upcoming Live Streams</h1>
+
+    <!-- Upcoming Streams Widget -->
+    <div id="youtube-upcoming"
+         data-channel-id="UC_svgodM3blLqWEBQ5yNjmA"
+         data-api-key="AIzaSyAJ_I47ep-oqTSvamGqMS9h7e4jT6aG8z4"
+         data-max-results="12"
+         data-open-in="modal"
+         data-timezone="America/New_York"
+         data-channel-handle="@versaillesumc">
+    </div>
+
+    <p class="note">
+      Upcoming worship streams appear here when scheduled. Click a thumbnail to open the pop-out player.
+    </p>
+  </div>
+
+  <!-- Pop-out modal -->
+  <div id="ytModal" class="modal hidden" aria-hidden="true" role="dialog" aria-label="Video player">
+    <div class="modal-content">
+      <button class="close" aria-label="Close">&times;</button>
+      <iframe id="ytPlayer" src="" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+
+  <script src="youtube-upcoming.js" defer></script>
+</body>
+</html>
